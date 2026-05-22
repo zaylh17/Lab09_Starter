@@ -7,20 +7,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
 
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+  <script>
+    window.TrackJS && TrackJS.install({ 
+      token: "20f253aed1a94c4d8a82f1f2919b49ef"
+      // for more configuration options, see https://docs.trackjs.com
+    });
+  </script>
+
   <style>
-    button {
-      margin: 3px;
-    }
-
-    button:hover {
-      cursor: pointer;
-    }
-
-    #first-num,
-    #second-num {
-      width: 60px;
-    }
-
+    button { margin: 3px; }
+    button:hover { cursor: pointer; }
+    #first-num, #second-num { width: 60px; }
     output {
       border: 1px solid gray;
       display: block;
@@ -29,11 +27,7 @@
       padding: 5px;
       width: 240px;
     }
-
-    main {
-      width: 800px;
-    }
-
+    main { width: 800px; }
     #error-btns {
       column-gap: 5px;
       display: flex;
@@ -41,8 +35,7 @@
       margin-top: 30px;
       row-gap: 5px;
     }
-
-    #error-btns>* {
+    #error-btns > * {
       padding: 8px 2px;
       width: 122px;
     }
@@ -88,6 +81,22 @@
   </main>
 
   <script>
+    /* ---------- Custom Error classes (Step 4) ---------- */
+    class InputError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'InputError';
+      }
+    }
+
+    class DivideByZeroError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'DivideByZeroError';
+      }
+    }
+
+    /* ---------- Calculator with try/catch/finally (Step 3) ---------- */
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -95,13 +104,135 @@
       let firstNum = document.querySelector('#first-num').value;
       let secondNum = document.querySelector('#second-num').value;
       let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+
+      try {
+        if (firstNum === '' || secondNum === '') {
+          throw new InputError('Both numbers must be provided.');
+        }
+        if (isNaN(Number(firstNum)) || isNaN(Number(secondNum))) {
+          throw new InputError('Inputs must be valid numbers.');
+        }
+        if (operator === '/' && Number(secondNum) === 0) {
+          throw new DivideByZeroError('Cannot divide by zero.');
+        }
+
+        const result = eval(`${firstNum} ${operator} ${secondNum}`);
+        output.innerHTML = result;
+      } catch (err) {
+        if (err instanceof DivideByZeroError) {
+          console.error(`DivideByZeroError caught: ${err.message}`);
+          output.innerHTML = 'Error: cannot divide by zero';
+        } else if (err instanceof InputError) {
+          console.error(`InputError caught: ${err.message}`);
+          output.innerHTML = `Error: ${err.message}`;
+        } else {
+          console.error(`Unexpected error: ${err.message}`);
+          output.innerHTML = 'Unexpected error';
+        }
+      } finally {
+        console.log('Calculation attempt finished.');
+      }
     });
 
+    /* ---------- Console demo buttons (Step 2) ---------- */
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
-    // Start your code here
-    // You may move this JS to another file if you wish
+    // 0. Console Log
+    errorBtns[0].addEventListener('click', () => {
+      console.log('Hello! This is a console.log message.');
+    });
+
+    // 1. Console Error
+    errorBtns[1].addEventListener('click', () => {
+      console.error('This is a console.error message — appears in red.');
+    });
+
+    // 2. Console Count
+    errorBtns[2].addEventListener('click', () => {
+      console.count('Count button clicks');
+    });
+
+    // 3. Console Warn
+    errorBtns[3].addEventListener('click', () => {
+      console.warn('This is a console.warn message — appears in yellow.');
+    });
+
+    // 4. Console Assert
+    errorBtns[4].addEventListener('click', () => {
+      console.assert(1 === 2, 'Assertion failed: 1 does not equal 2');
+    });
+
+    // 5. Console Clear
+    errorBtns[5].addEventListener('click', () => {
+      console.clear();
+    });
+
+    // 6. Console Dir
+    errorBtns[6].addEventListener('click', () => {
+      console.dir(document.querySelector('main'));
+    });
+
+    // 7. Console dirxml
+    errorBtns[7].addEventListener('click', () => {
+      console.dirxml(document.querySelector('main'));
+    });
+
+    // 8. Console Group Start
+    errorBtns[8].addEventListener('click', () => {
+      console.group('My Group');
+      console.log('This log is inside the group');
+      console.log('So is this one');
+    });
+
+    // 9. Console Group End
+    errorBtns[9].addEventListener('click', () => {
+      console.groupEnd();
+      console.log('This log is outside the group');
+    });
+
+    // 10. Console Table
+    errorBtns[10].addEventListener('click', () => {
+      const data = [
+        { food: 'Sashimi', rating: 10, cuisine: 'Japanese' },
+        { food: 'Green Bean Casserole', rating: 8, cuisine: 'American' },
+        { food: 'Brownies', rating: 5, cuisine: 'Dessert' }
+      ];
+      console.table(data);
+    });
+
+    // 11. Start Timer
+    errorBtns[11].addEventListener('click', () => {
+      console.time('My Timer');
+    });
+
+    // 12. End Timer
+    errorBtns[12].addEventListener('click', () => {
+      console.timeEnd('My Timer');
+    });
+
+    // 13. Console Trace
+    errorBtns[13].addEventListener('click', () => {
+      function inner() {
+        console.trace('Trace from inner()');
+      }
+      function outer() {
+        inner();
+      }
+      outer();
+    });
+
+    // 14. Trigger a Global Error (Step 5)
+    errorBtns[14].addEventListener('click', () => {
+      thisFunctionDoesNotExist();
+    });
+
+    /* ---------- Global error handler (Step 5) ---------- */
+    window.addEventListener('error', (event) => {
+      console.log('Global error caught by window error listener:');
+      console.log(`Message: ${event.message}`);
+      console.log(`File: ${event.filename}`);
+      console.log(`Line: ${event.lineno}, Column: ${event.colno}`);
+    });
   </script>
 </body>
 
